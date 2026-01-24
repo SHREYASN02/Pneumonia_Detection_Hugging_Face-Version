@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    # The volumes section is commented out.
+    # For development, you can uncomment it to reflect code changes without rebuilding the image.
+    # For production, it's better to build a new image with the updated code.
+    # volumes:
+    #   - ./Frontend-code/Frontend-vscode:/app

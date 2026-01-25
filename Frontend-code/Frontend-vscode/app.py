@@ -131,6 +131,21 @@ def predict():
     if not allowed_file(imagefile.filename):
         return render_template('index.html', error='Please upload a valid image file.')
 
+    try:
+        # Save the image temporarily to check its mode
+        temp_image_path = os.path.join('/tmp', imagefile.filename)
+        imagefile.seek(0)
+        imagefile.save(temp_image_path)
+        
+        img_check = Image.open(temp_image_path)
+        if img_check.mode != 'L':
+            os.remove(temp_image_path) # Clean up temp file
+            return render_template('index.html', error='Warning: This does not appear to be a grayscale X-ray image. Please upload a valid X-ray.')
+        os.remove(temp_image_path) # Clean up temp file
+    except Exception as e:
+        logging.error(f"Error checking image mode: {e}")
+        return render_template('index.html', error='Invalid image file or error processing image.')
+
     image_path = os.path.join('static', imagefile.filename)
     imagefile.seek(0)
     imagefile.save(image_path)

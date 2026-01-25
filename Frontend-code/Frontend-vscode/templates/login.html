@@ -11,40 +11,48 @@
     <style>
         body {
             background: linear-gradient(135deg, #1a1a1a, #3c3c3c);
-            color: #fff;
+            color: #e0e0e0;
             font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .container {
+            flex: 1;
             padding-top: 50px;
             max-width: 500px;
         }
         .card {
-            background-color: rgba(44, 44, 44, 0.8);
-            border: none;
+            background-color: rgba(44, 44, 44, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            box-shadow: 0 15px 35px rgba(0, 123, 255, 0.2);
         }
         .card-header {
             background: linear-gradient(135deg, #007bff, #0056b3);
             color: #fff;
             font-weight: 600;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             text-align: center;
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
+            border-top-left-radius: 14px;
+            border-top-right-radius: 14px;
             border-bottom: none;
+            padding: 20px;
         }
         .btn-primary {
             background: linear-gradient(135deg, #007bff, #0056b3);
             border: none;
-            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1rem;
         }
         .btn-primary::before {
             content: '';
@@ -61,12 +69,13 @@
         }
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
         }
         .form-control {
             background-color: rgba(51, 51, 51, 0.5);
             border: 1px solid #555;
             color: #fff;
+            padding: 12px;
         }
         .form-control:focus {
             background-color: rgba(51, 51, 51, 0.7);
@@ -75,7 +84,7 @@
             box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.5);
         }
         .form-label {
-            color: #fff;
+            color: #e0e0e0;
         }
         a {
             color: #007bff;
@@ -85,6 +94,13 @@
             color: #0056b3;
             text-decoration: underline;
         }
+        .footer {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #aaa;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
@@ -93,7 +109,7 @@
             <div class="card-header">
                 Login
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -102,21 +118,26 @@
                     {% endif %}
                 {% endwith %}
                 <form method="POST" action="/login">
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="username" class="form-label">Username</label>
                         <input type="text" class="form-control" id="username" name="username" required>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                 </form>
-                <p class="mt-3" style="color: #fff;">
+                <p class="mt-4 text-center">
                     Don't have an account? <a href="/signup">Sign up here</a>.
                 </p>
             </div>
         </div>
     </div>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Pneumonia Detector. All Rights Reserved.</p>
+        </div>
+    </footer>
 </body>
 </html>

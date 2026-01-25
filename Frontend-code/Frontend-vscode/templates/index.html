@@ -11,8 +11,11 @@
     <style>
         body {
             background: linear-gradient(135deg, #1a1a1a, #3c3c3c);
-            color: #fff;
+            color: #e0e0e0;
             font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .navbar {
             background: linear-gradient(135deg, #007bff, #0056b3);
@@ -23,11 +26,12 @@
             font-size: 1.5rem;
         }
         .container {
-            padding-top: 30px;
-            padding-bottom: 30px;
+            flex: 1;
+            padding-top: 50px;
+            padding-bottom: 50px;
         }
         .upload-section, .result-card, .insights-section, .chart-container {
-            background-color: rgba(44, 44, 44, 0.8);
+            background-color: rgba(44, 44, 44, 0.9);
             padding: 40px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -36,7 +40,7 @@
         }
         .upload-section:hover, .result-card:hover, .insights-section:hover, .chart-container:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            box-shadow: 0 15px 35px rgba(0, 123, 255, 0.2);
         }
         .upload-section h1 {
             color: #007bff;
@@ -47,6 +51,7 @@
             background-color: rgba(51, 51, 51, 0.5);
             border: 1px solid #555;
             color: #fff;
+            padding: 12px;
         }
         .form-control:focus {
             background-color: rgba(51, 51, 51, 0.7);
@@ -78,10 +83,7 @@
         }
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-        }
-        .result-section {
-            margin-top: 40px;
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
         }
         .result-card {
             display: flex;
@@ -102,6 +104,13 @@
         .disclaimer {
             color: #ffc107;
             font-weight: bold;
+        }
+        .footer {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #aaa;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 50px;
         }
     </style>
 </head>
@@ -124,7 +133,7 @@
     <div class="container">
         <div class="upload-section">
             <h1>Upload X-Ray Image</h1>
-            <form action="/predict" method="post" enctype="multipart/form-data">
+            <form action="/predict" method="post" enctype="multipart/form-data" id="prediction-form">
                 {% if error %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
@@ -133,15 +142,17 @@
                 <div class="mb-3">
                     <input class="form-control" type="file" name="imagefile" required autofocus>
                 </div>
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
                 <button class="btn btn-primary" type="submit">Predict</button>
             </form>
         </div>
 
         {% if prediction %}
-        <div class="result-section">
-            <div class="result-card">
-                <img src="{{ imagePath }}" alt="Uploaded X-Ray" height="224" width="224">
-                <div class="result-text">
+        <div class="result-card">
+            <div class="d-flex align-items-center">
+                <img src="{{ imagePath }}" alt="Uploaded X-Ray" height="224" width="224" class="me-4">
+                <div>
                     <h2>Prediction Result</h2>
                     <h4>Pneumonia: {{ prediction }}</h4>
                 </div>
@@ -155,9 +166,43 @@
             <p class="disclaimer">Disclaimer: This is not medical advice. Consult a healthcare professional for any health concerns.</p>
             <ul>
                 {% for insight in insights %}
-                <li>{{ insight }}</li>
+                <li>{{ insight | safe }}</li>
                 {% endfor %}
             </ul>
+        </div>
+        {% endif %}
+
+        {% if hospitals %}
+        <div class="insights-section">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-hospital" viewBox="0 0 16 16">
+                    <path d="M8.5 5.5a.5.5 0 0 0-1 0v.634l-.549-.317a.5.5 0 0 0-.702.462l.188 1.07-1.178.678a.5.5 0 0 0-.26.443l.035.986a.5.5 0 0 0 .363.444l1.896.947a.5.5 0 0 0 .549-.317l.549-.95-1.07-.188a.5.5 0 0 1-.462-.702l.317-.549V5.5zm-2 4.634l.549.317a.5.5 0 0 0 .702-.462l-.188-1.07 1.178-.678a.5.5 0 0 0 .26-.443l-.035-.986a.5.5 0 0 0-.363-.444L6.104 6.634a.5.5 0 0 0-.549.317l-.549.95 1.07.188a.5.5 0 0 1 .462.702l-.317.549V10.134zM14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 2v12h12V2H2z"/>
+                    <path d="M5 13.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+                Nearby Hospitals
+            </h3>
+            <p class="disclaimer">The following is a list of nearby hospitals based on your location. Please verify the information before visiting.</p>
+            <div class="row">
+                {% for hospital in hospitals %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ hospital.name }}</h5>
+                            <p class="card-text flex-grow-1">{{ hospital.address }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{{ hospital.distance | round(2) }} km away</small>
+                                <a href="{{ hospital.maps_link }}" target="_blank" class="btn btn-sm btn-primary d-flex align-items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill me-1" viewBox="0 0 16 16">
+                                        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                                    </svg>
+                                    Get Directions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
 
@@ -169,9 +214,24 @@
         {% endif %}
     </div>
 
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Pneumonia Detector. All Rights Reserved.</p>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                }, function(error) {
+                    console.error("Error getting geolocation: " + error.message);
+                });
+            }
+
             {% if imagePath %}
             var ctx = document.getElementById("accuracyChart").getContext("2d");
             var myChart = new Chart(ctx, {
@@ -181,7 +241,7 @@
                     datasets: [{
                         label: "Accuracy (%)",
                         data: [98, 68, 70, 77],
-                        backgroundColor: ["#2a9d8f", "#e9c46a", "#f4a261", "#e76f51"],
+                        backgroundColor: ["#007bff", "#6c757d", "#198754", "#dc3545"],
                         borderWidth: 1
                     }]
                 },

@@ -13,11 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the frontend code into the container at /app
 COPY Frontend-code/ .
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
+# Make port 8080 available to the world outside this container
+EXPOSE 8080
 
 # Define environment variable
 ENV NAME World
 
 # Run app.py when the container launches
-CMD ["python", "app.py"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "app:app"]

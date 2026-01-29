@@ -8,3 +8,4 @@ keras-preprocessing==1.1.2
 numpy==2.4.1
 requests==2.32.5
 werkzeug==3.1.5
+gunicorn==22.0.0

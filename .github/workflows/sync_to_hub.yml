@@ -18,11 +18,17 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          echo "Removing virtual environment directory..."
+          rm -rf Frontend-code/keras/
+          
+          echo "Initializing new repository and committing..."
           git checkout --orphan new-main
           git add -A
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git commit -m "Initial commit"
+          
+          echo "Pushing to Hugging Face Hub..."
           git remote add space https://shreyasarya:$HF_TOKEN@huggingface.co/spaces/shreyasarya/ML
           git push -f space new-main:main
           echo "Push complete!"

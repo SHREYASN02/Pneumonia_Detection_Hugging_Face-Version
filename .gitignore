@@ -1,19 +1,12 @@
-# Git and GitHub files
-.git/
-.github/
-.gitattributes
-
-# Python virtual environments
-**/keras/
-**/.venv/
-
-# Python cache
-**/__pycache__/
+# Byte-compiled / optimized / DLL files
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Other deployment configurations
-docker-compose.yml
-run_app.sh
-.vercelignore
-vercel.json
-.hfignore
+# Virtual Environments
+.venv/
+keras/
+
+# Other
+.DS_Store

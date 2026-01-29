@@ -11,6 +11,7 @@ import logging
 import os
 import math
 import requests
+import base64
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-secret-key-that-you-should-change'
@@ -131,61 +132,66 @@ def predict():
     if not allowed_file(imagefile.filename):
         return render_template('index.html', error='Please upload a valid image file.')
 
+    temp_image_path = os.path.join('/tmp', imagefile.filename)
     try:
         # Save the image temporarily to check its mode
-        temp_image_path = os.path.join('/tmp', imagefile.filename)
         imagefile.seek(0)
         imagefile.save(temp_image_path)
         
         img_check = Image.open(temp_image_path)
         if img_check.mode != 'L':
-            os.remove(temp_image_path) # Clean up temp file
             return render_template('index.html', error='Warning: This does not appear to be a grayscale X-ray image. Please upload a valid X-ray.')
-        os.remove(temp_image_path) # Clean up temp file
+        
+        img = load_img(temp_image_path, target_size=(500, 500), color_mode='grayscale')
+        x = img_to_array(img)
+        x /= 255.0
+        x = np.expand_dims(x, axis=0)
+
+        prediction = model.predict(x)[0][0]
+        prediction_percent = prediction * 100
+        classification = f"Positive ({prediction_percent:.2f}%)" if prediction >= 0.5 else f"Negative ({prediction_percent:.2f}%)"
+
+        # Encode the image to base64 to display it on the webpage
+        with open(temp_image_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+        image_data_url = f"data:image/jpeg;base64,{encoded_string}"
+
+
+        insights = []
+        hospitals = {}
+        if prediction_percent >= 20:
+            insights = [
+                "**Get Plenty of Rest:** Your body needs energy to fight infection.",
+                "**Stay Hydrated:** Fluids help loosen mucus and prevent dehydration.",
+                "**Follow Medical Advice:** Take all medications as prescribed by your doctor.",
+                "**Manage Symptoms:** Consult a doctor about over-the-counter symptom relief.",
+            ]
+            user_lat = request.form.get('latitude')
+            user_lon = request.form.get('longitude')
+            if user_lat and user_lon:
+                user_lat, user_lon = float(user_lat), float(user_lon)
+                hospitals = {
+                    "multi_specialty": find_nearby_places(user_lat, user_lon, "hospital"),
+                    "specialized": find_nearby_places(user_lat, user_lon, "clinic"),
+                    "nursing_home": find_nearby_places(user_lat, user_lon, "nursing_home"),
+                }
+        else:
+            insights = [
+                "**Practice Good Hygiene:** Wash hands frequently.",
+                "**Avoid Smoking:** Smoking damages your lungs.",
+                "**Get Vaccinated:** Ask your doctor about pneumonia and flu vaccines.",
+                "**Maintain a Healthy Lifestyle:** A balanced diet and exercise boost your immune system.",
+            ]
+
+        return render_template('index.html', prediction=classification, imagePath=image_data_url, insights=insights, hospitals=hospitals)
+
     except Exception as e:
-        logging.error(f"Error checking image mode: {e}")
+        logging.error(f"Error processing image: {e}")
         return render_template('index.html', error='Invalid image file or error processing image.')
-
-    image_path = os.path.join('static', imagefile.filename)
-    imagefile.seek(0)
-    imagefile.save(image_path)
-
-    img = load_img(image_path, target_size=(500, 500), color_mode='grayscale')
-    x = img_to_array(img)
-    x /= 255.0
-    x = np.expand_dims(x, axis=0)
-
-    prediction = model.predict(x)[0][0]
-    prediction_percent = prediction * 100
-    classification = f"Positive ({prediction_percent:.2f}%)" if prediction >= 0.5 else f"Negative ({prediction_percent:.2f}%)"
-
-    insights = []
-    hospitals = {}
-    if prediction_percent >= 20:
-        insights = [
-            "**Get Plenty of Rest:** Your body needs energy to fight infection.",
-            "**Stay Hydrated:** Fluids help loosen mucus and prevent dehydration.",
-            "**Follow Medical Advice:** Take all medications as prescribed by your doctor.",
-            "**Manage Symptoms:** Consult a doctor about over-the-counter symptom relief.",
-        ]
-        user_lat = request.form.get('latitude')
-        user_lon = request.form.get('longitude')
-        if user_lat and user_lon:
-            user_lat, user_lon = float(user_lat), float(user_lon)
-            hospitals = {
-                "multi_specialty": find_nearby_places(user_lat, user_lon, "hospital"),
-                "specialized": find_nearby_places(user_lat, user_lon, "clinic"),
-                "nursing_home": find_nearby_places(user_lat, user_lon, "nursing_home"),
-            }
-    else:
-        insights = [
-            "**Practice Good Hygiene:** Wash hands frequently.",
-            "**Avoid Smoking:** Smoking damages your lungs.",
-            "**Get Vaccinated:** Ask your doctor about pneumonia and flu vaccines.",
-            "**Maintain a Healthy Lifestyle:** A balanced diet and exercise boost your immune system.",
-        ]
-
-    return render_template('index.html', prediction=classification, imagePath=image_path, insights=insights, hospitals=hospitals)
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

@@ -3,8 +3,9 @@
 .github/
 .gitattributes
 
-# Python virtual environment
-Frontend-code/keras/
+# Python virtual environments
+**/keras/
+**/.venv/
 
 # Python cache
 **/__pycache__/

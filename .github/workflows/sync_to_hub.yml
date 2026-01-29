@@ -22,9 +22,20 @@ jobs:
           from huggingface_hub import HfApi
           import os
           api = HfApi()
+          token = os.environ.get('HF_TOKEN')
+          repo_id = 'shreyasarya/ML'
+
+          api.create_repo(
+              repo_id=repo_id,
+              repo_type='space',
+              space_sdk='docker',
+              token=token,
+              exist_ok=True
+          )
+
           api.upload_large_folder(
               folder_path='.',
-              repo_id='shreyasarya/ML',
+              repo_id=repo_id,
               repo_type='space'
           )
           "

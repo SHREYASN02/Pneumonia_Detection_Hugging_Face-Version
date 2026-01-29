@@ -3,9 +3,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from tensorflow.keras.utils import load_img
 from keras_preprocessing.image import img_to_array
 from keras.models import load_model
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import numpy as np
 import logging
 import os
@@ -14,31 +11,9 @@ import requests
 import base64
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'a-secret-key-that-you-should-change'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-
-# --- Database Models ---
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(120), nullable=False)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 # --- ML Model and Helpers ---
 Model_Path = 'models/pneu_cnn_model.h5'
@@ -113,12 +88,10 @@ def find_nearby_places(user_lat, user_lon, amenity):
 
 # --- Routes ---
 @app.route('/')
-@login_required
 def index():
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
-@login_required
 def predict():
     logging.info("Prediction request received.")
     if 'imagefile' not in request.files:
@@ -193,71 +166,4 @@ def predict():
         if os.path.exists(temp_image_path):
             os.remove(temp_image_path)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    if request.method == 'POST':
-        logging.info("Login request received (POST).")
-        username = request.form.get('username')
-        password = request.form.get('password')
-        logging.info(f"Attempting login for user: {username}")
 
-        user = User.query.filter_by(username=username).first()
-        
-        if user:
-            logging.info(f"User '{username}' found in the database.")
-            if user.check_password(password):
-                logging.info(f"Password for user '{username}' is correct. Logging in and redirecting to index.")
-                login_user(user)
-                flash('Welcome to Pneumonia Detection!', 'success')
-                return redirect(url_for('index'))
-            else:
-                logging.warning(f"Invalid password for user '{username}'.")
-        else:
-            logging.warning(f"User '{username}' not found in the database.")
-
-        flash('Invalid username or password', 'danger')
-        return redirect(url_for('login'))
-
-    return render_template('login.html')
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    if request.method == 'POST':
-        if User.query.filter_by(username=request.form['username']).first():
-            flash('Username already exists.', 'danger')
-            return redirect(url_for('signup'))
-        new_user = User(username=request.form['username'])
-        new_user.set_password(request.form['password'])
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Account created successfully. Please login.', 'success')
-        return redirect(url_for('login'))
-    return render_template('signup.html')
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-def init_db():
-    instance_path = os.path.join(app.root_path, 'instance')
-    if not os.path.exists(instance_path):
-        os.makedirs(instance_path)
-
-    with app.app_context():
-        db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin')
-            admin.set_password('secret')
-            db.session.add(admin)
-            db.session.commit()
-            logging.info("Admin user created.")
-
-if __name__ == '__main__':
-    init_db()
-    app.run(port=5000, debug=True)

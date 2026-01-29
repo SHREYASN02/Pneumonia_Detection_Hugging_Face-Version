@@ -3,10 +3,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Wait for the database file to be created, and then initialize it.
-echo "Initializing database..."
-python -c 'from app import init_db; init_db()'
-echo "Database initialization complete."
+
 
 # Start the Gunicorn server
 echo "Starting Gunicorn server..."

@@ -10,3 +10,4 @@ keras/
 
 # Other
 .DS_Store
+instance/users.db

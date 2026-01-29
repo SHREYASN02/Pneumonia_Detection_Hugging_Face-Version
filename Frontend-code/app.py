@@ -48,7 +48,7 @@ def find_nearby_places(user_lat, user_lon, amenity):
     out center;
     """
     try:
-        response = requests.post(overpass_url, data={'data': overpass_query})
+        response = requests.post(overpass_url, data={'data': overpass_query}, timeout=10) # Added timeout
         response.raise_for_status()
         data = response.json()
         
@@ -82,6 +82,9 @@ def find_nearby_places(user_lat, user_lon, amenity):
         
         places_list = list(places.values())
         return sorted(places_list, key=lambda x: x['distance'])[:5]
+    except requests.exceptions.Timeout:
+        logging.error(f"Timeout querying Overpass API for {amenity}. The request took longer than 10 seconds.")
+        return []
     except requests.exceptions.RequestException as e:
         logging.error(f"Error querying Overpass API for {amenity}: {e}")
         return []
@@ -139,15 +142,15 @@ def predict():
                 "**Follow Medical Advice:** Take all medications as prescribed by your doctor.",
                 "**Manage Symptoms:** Consult a doctor about over-the-counter symptom relief.",
             ]
-            # user_lat = request.form.get('latitude')
-            # user_lon = request.form.get('longitude')
-            # if user_lat and user_lon:
-            #     user_lat, user_lon = float(user_lat), float(user_lon)
-            #     hospitals = {
-            #         "multi_specialty": find_nearby_places(user_lat, user_lon, "hospital"),
-            #         "specialized": find_nearby_places(user_lat, user_lon, "clinic"),
-            #         "nursing_home": find_nearby_places(user_lat, user_lon, "nursing_home"),
-            #     }
+            user_lat = request.form.get('latitude')
+            user_lon = request.form.get('longitude')
+            if user_lat and user_lon:
+                user_lat, user_lon = float(user_lat), float(user_lon)
+                hospitals = {
+                    "multi_specialty": find_nearby_places(user_lat, user_lon, "hospital"),
+                    "specialized": find_nearby_places(user_lat, user_lon, "clinic"),
+                    "nursing_home": find_nearby_places(user_lat, user_lon, "nursing_home"),
+                }
         else:
             insights = [
                 "**Practice Good Hygiene:** Wash hands frequently.",

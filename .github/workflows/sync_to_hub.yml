@@ -14,31 +14,13 @@ jobs:
           lfs: true
       - name: Install huggingface-hub
         run: pip install huggingface-hub
-      - name: Push to hub
+      - name: Squash and Push to Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python -c "
-          from huggingface_hub import HfApi
-          import os
-          api = HfApi()
-          token = os.environ.get('HF_TOKEN')
-          repo_id = 'shreyasarya/ML'
-
-          print('Ensuring space exists and is configured for Docker...')
-          api.create_repo(
-              repo_id=repo_id,
-              repo_type='space',
-              space_sdk='docker',
-              token=token,
-              exist_ok=True
-          )
-          print('Space configured. Starting large folder upload...')
-          
-          api.upload_large_folder(
-              folder_path='.',
-              repo_id=repo_id,
-              repo_type='space'
-          )
-          print('Upload complete!')
-          "
+          git checkout --orphan new-main
+          git add -A
+          git commit -m "Initial commit"
+          git remote add space https://shreyasarya:$HF_TOKEN@huggingface.co/spaces/shreyasarya/ML
+          git push -f space new-main:main
+          echo "Push complete!"

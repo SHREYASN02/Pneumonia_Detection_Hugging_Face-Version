@@ -26,7 +26,6 @@ jobs:
               folder_path='.',
               repo_id='shreyasarya/ML',
               repo_type='space',
-              token=os.environ.get('HF_TOKEN'),
               commit_message='Sync from GitHub'
           )
           "

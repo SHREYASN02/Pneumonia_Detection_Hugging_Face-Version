@@ -198,12 +198,28 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form['username']).first()
-        if user and user.check_password(request.form['password']):
-            login_user(user)
-            flash('Welcome to Pneumonia Detection!', 'success')
-            return redirect(url_for('index'))
+        logging.info("Login request received (POST).")
+        username = request.form.get('username')
+        password = request.form.get('password')
+        logging.info(f"Attempting login for user: {username}")
+
+        user = User.query.filter_by(username=username).first()
+        
+        if user:
+            logging.info(f"User '{username}' found in the database.")
+            if user.check_password(password):
+                logging.info(f"Password for user '{username}' is correct. Logging in and redirecting to index.")
+                login_user(user)
+                flash('Welcome to Pneumonia Detection!', 'success')
+                return redirect(url_for('index'))
+            else:
+                logging.warning(f"Invalid password for user '{username}'.")
+        else:
+            logging.warning(f"User '{username}' not found in the database.")
+
         flash('Invalid username or password', 'danger')
+        return redirect(url_for('login'))
+
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])

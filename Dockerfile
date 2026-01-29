@@ -16,8 +16,6 @@ COPY Frontend-code/ .
 # Make port 7860 available to the world outside this container
 EXPOSE 7860
 
-# Define environment variable
-ENV NAME World
+# Run the startup script
+CMD ["./run.sh"]
 
-# Run app.py when the container launches
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:7860", "app:app"]
